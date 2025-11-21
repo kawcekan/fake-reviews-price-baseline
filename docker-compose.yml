@@ -1,0 +1,32 @@
+# docker-compose.yml
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appdb
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: postgresql://postgres:postgres@db:5432/appdb
+      MSRP_WEIGHT: 0.6
+      HIST_WEIGHT: 0.4
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_API_URL: http://localhost:8000/api
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
